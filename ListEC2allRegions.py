@@ -1,44 +1,50 @@
-## List all EC2 resources within the account in all regions and its related resources
+## list all existing EC2 instances from all AWS Regions
+## This code was buit based on the youtube video presentation: https://www.youtube.com/watch?v=VXxScSbbRAs 
+## The objective of reproducing this code is educational and is not intent to be used commercially
 ##
 
 import boto3
 import pprint
 
-session=boto3.session(profile_name="aws_ec2_iam_user",region_name="us-east-1")
+from pkg_resources import cleanup_resources
 
-##  List all regions is a feature available just for client objects (nor for resources)
-##
+session=boto3.Session('ec2',region_name='sa-east-1')
+ec2_cli=boto3.client(service_name='ec2')
 
-client = session.client(service_name='ec2')
-all_regions=client.describe_regions()
+all_regions=ec2_cli.describe_regions()
 
-##  This will list ALL regions 
-#
-##  pprint.pprint(all_regions['Regions'])
-#
-## So we will get just the regions name in a list 
-#
-list_of_regions[]
+##  List all regions is a feature available just for client objects (see ec2_cli statement above)
+
+list_of_regions=[]
+
 for each_region in all_regions['Regions']:
-    #print(each_region['RegionName'])
     list_of_regions.append(each_region['RegionName'])
-    print(list_of_regions)  
+print(list_of_regions)
 
-## Once we got the regions list, we can use resource instead of client to reduce de amount of code
-## We need a session for each region
-#
-## For each_region in list_of_Regions we will get the EC2 list
-#     
+##  To list the EC2 instances from each regions, is necessary to open a session in each reagion.
+##  In adition, we need to refer to Resources instead of client to let code simple and easir to code
 
+for each_region in list_of_regions:
+    session=boto3.Session('ec2',region_name=each_region)
+    ec2=boto3.resource('ec2',each_region)
+    print("List of EC2 instances from the region: ", each_region)
+    for each_instance in ec2.instances.all():
+        print(each_instance.id,each_instance.state['Name'])
 
-for each_region in list_of_Regions:
-    session=boto3.session(profile_name="aws_ec2_iam_user",region_name=each_region)
-    resource=session.resource(service_name="ec2")
-    all_EC2s=resource.describe_instances()
-    list_of_EC2s[]
-    for each_EC2 in all_EC2s['Name']:
-        list_of_EC2s.append(each_EC2['InstanceName']
-        print ("List of EC2s:", each_EC2)
-    
-
-
+## The output expected to be generate is similar to the following:
+## For the purpose for this test, there was just one instance located in the São Paulo region.
+##
+##
+##      List of EC2 instances from the region:  ap-northeast-3
+##      List of EC2 instances from the region:  ap-northeast-2
+##      List of EC2 instances from the region:  ap-northeast-1
+##      List of EC2 instances from the region:  sa-east-1
+##      i-069034efe5cj63646eb running
+##      List of EC2 instances from the region:  ca-central-1
+##      List of EC2 instances from the region:  ap-southeast-1
+##      List of EC2 instances from the region:  ap-southeast-2
+##      List of EC2 instances from the region:  eu-central-1
+##      List of EC2 instances from the region:  us-east-1
+##      List of EC2 instances from the region:  us-east-2
+##      List of EC2 instances from the region:  us-west-1
+##      List of EC2 instances from the region:  us-west-2
